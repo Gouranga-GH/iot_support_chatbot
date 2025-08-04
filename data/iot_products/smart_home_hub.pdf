@@ -1,0 +1,35 @@
+Smart Home Hub - Product Documentation
+
+Product Overview:
+The Smart Home Hub is a central control unit that manages all your smart home devices. It provides a unified interface for controlling lighting, security, climate, and entertainment systems.
+
+Key Features:
+- Centralized control for all smart devices
+- Voice command support
+- Mobile app integration
+- Automated routines and schedules
+- Energy monitoring and optimization
+- Security integration
+
+Technical Specifications:
+- Processor: ARM Cortex-A72 quad-core
+- Memory: 2GB RAM
+- Storage: 16GB eMMC
+- Connectivity: Wi-Fi 6, Bluetooth 5.0, Zigbee, Z-Wave
+- Power: 12V DC adapter
+- Dimensions: 120mm x 80mm x 25mm
+
+Installation Guide:
+1. Unpack the Smart Home Hub
+2. Connect power adapter
+3. Download the mobile app
+4. Follow setup wizard
+5. Add your smart devices
+
+Troubleshooting:
+- If hub doesn't connect to Wi-Fi, check network settings
+- For device pairing issues, ensure devices are in pairing mode
+- Reset hub by holding reset button for 10 seconds
+
+Support Contact:
+For technical support, contact our Smart Home Hub expert. 

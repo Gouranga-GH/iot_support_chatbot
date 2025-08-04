@@ -1,0 +1,28 @@
+# IOT Product Support Chatbot Environment Configuration
+# Copy this file to .env and fill in your actual values
+
+# API Keys (Free tier available)
+GROQ_API_KEY=your_chatgroq_api_key_here
+
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DATABASE=iot_chatbot_db
+MYSQL_PORT=3306
+
+# Application Settings
+DEBUG=True
+LANGUAGE_SUPPORT=["English", "Malay"]
+FEEDBACK_INTERVAL=3
+
+# LLM Configuration
+LLM_MODEL=gemma2-9b-it
+TEMPERATURE=0.1
+
+# Document Processing
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+
+# Session Management
+SESSION_TIMEOUT=3600
