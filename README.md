@@ -105,20 +105,27 @@ The application will be available at `http://localhost:8501`
 
 ## 📸 Screenshots
 
-### User Registration & Language Selection
-![User Registration](screenshots/IOT_AI_1.png)
+![IOT_AI_1](screenshots/IOT_AI_1.png)
 
-### Chat Interface
-![Chat Interface](screenshots/IOT_AI_2.png)
+![IOT_AI_2](screenshots/IOT_AI_2.png)
 
-### Product Support Conversation
-![Product Support](screenshots/IOT_AI_3.png)
+![IOT_AI_3](screenshots/IOT_AI_3.png)
 
-### Feedback System
-![Feedback System](screenshots/IOT_AI_4.png)
+![IOT_AI_4](screenshots/IOT_AI_4.png)
 
-### Expert Contact & Session End
-![Expert Contact](screenshots/IOT_AI_5.png)
+![IOT_AI_5](screenshots/IOT_AI_5.png)
+
+![IOT_AI_6](screenshots/IOT_AI_6.png)
+
+![IOT_AI_7](screenshots/IOT_AI_7.png)
+
+![IOT_AI_8](screenshots/IOT_AI_8.png)
+
+![IOT_AI_9](screenshots/IOT_AI_9.png)
+
+![IOT_AI_10](screenshots/IOT_AI_10.png)
+
+![IOT_AI_11](screenshots/IOT_AI_11.png)
 
 ## Usage Guide
 
@@ -356,6 +363,3 @@ This project is open source and available under the MIT License.
 - **API Endpoints**: RESTful API for external integrations
 - **Advanced RAG**: Enhanced document processing and retrieval
 
----
-
-**Built using Streamlit, LangChain, and ChatGroq** 
