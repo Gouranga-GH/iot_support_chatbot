@@ -15,14 +15,3 @@ MYSQL_PORT=3306
 DEBUG=True
 LANGUAGE_SUPPORT=["English", "Malay"]
 FEEDBACK_INTERVAL=3
-
-# LLM Configuration
-LLM_MODEL=gemma2-9b-it
-TEMPERATURE=0.1
-
-# Document Processing
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
-
-# Session Management
-SESSION_TIMEOUT=3600
