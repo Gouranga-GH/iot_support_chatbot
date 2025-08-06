@@ -1,5 +1,6 @@
 # Core Framework
 streamlit>=1.28.0                    # Web interface framework for building the app UI
+flask>=2.3.0                         # Web framework for API endpoints and deployment
 langchain>=0.1.0                     # Core library for Retrieval-Augmented Generation (RAG) and LLM integration
 langchain-community>=0.0.10          # Community-contributed integrations for LangChain (e.g., loaders, retrievers)
 langchain-core>=0.1.0               # Core abstractions and utilities for LangChain

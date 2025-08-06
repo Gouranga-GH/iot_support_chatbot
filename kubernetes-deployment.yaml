@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-support-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-support-chatbot
+  template:
+    metadata:
+      labels:
+        app: iot-support-chatbot
+    spec:
+      containers:
+      - name: iot-support-chatbot
+        image: us-central1-docker.pkg.dev/iot-support-chatbot-468210/iot-support-repo/iot-support-chatbot:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: iot-support-secrets
+              key: GROQ_API_KEY
+        - name: MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: iot-support-secrets
+              key: MYSQL_HOST
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: iot-support-secrets
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: iot-support-secrets
+              key: MYSQL_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: iot-support-secrets
+              key: MYSQL_DATABASE
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-support-service
+spec:
+  selector:
+    app: iot-support-chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer 
