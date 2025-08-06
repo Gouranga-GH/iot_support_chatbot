@@ -19,30 +19,21 @@ spec:
         - containerPort: 5000
         env:
         - name: GROQ_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: iot-support-secrets
-              key: GROQ_API_KEY
+          value: "${GROQ_API_KEY}"
         - name: MYSQL_HOST
-          valueFrom:
-            secretKeyRef:
-              name: iot-support-secrets
-              key: MYSQL_HOST
+          value: "${MYSQL_HOST}"
         - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: iot-support-secrets
-              key: MYSQL_USER
+          value: "${MYSQL_USER}"
         - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: iot-support-secrets
-              key: MYSQL_PASSWORD
+          value: "${MYSQL_PASSWORD}"
         - name: MYSQL_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: iot-support-secrets
-              key: MYSQL_DATABASE
+          value: "${MYSQL_DATABASE}"
+        - name: MYSQL_PORT
+          value: "${MYSQL_PORT}"
+        - name: DEBUG
+          value: "${DEBUG}"
+        - name: FEEDBACK_INTERVAL
+          value: "${FEEDBACK_INTERVAL}"
 
 ---
 

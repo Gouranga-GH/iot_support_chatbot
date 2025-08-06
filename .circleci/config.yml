@@ -46,10 +46,16 @@ jobs:
           name: Configure GKE
           command: |
               gcloud container clusters get-credentials $GKE_CLUSTER --region $GOOGLE_COMPUTE_REGION --project $GOOGLE_PROJECT_ID
+      
+      - run:
+          name: Substitute environment variables
+          command: |
+              envsubst < kubernetes-deployment.yaml > kubernetes-deployment-substituted.yaml
+      
       - run:
           name: Deploy to GKE
           command: |
-              kubectl apply -f kubernetes-deployment.yaml --validate=false
+              kubectl apply -f kubernetes-deployment-substituted.yaml --validate=false
               kubectl rollout restart deployment iot-support-chatbot
 
 workflows:
