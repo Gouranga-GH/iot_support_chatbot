@@ -1,6 +1,6 @@
 # IoT Support Chatbot - Setup Guide
 
-This guide will help you set up and run the IoT Support Chatbot properly.
+This guide will help you set up and run the IoT Support Chatbot with Google Cloud SQL.
 
 ## 🚀 Quick Start
 
@@ -9,13 +9,34 @@ This guide will help you set up and run the IoT Support Chatbot properly.
 pip install -r requirements.txt
 ```
 
-### Step 2: Create Environment File
-Create a `.env` file in the root directory with at least:
+### Step 2: Set Up Google Cloud SQL
+Follow the [CLOUD_SQL_SETUP.md](CLOUD_SQL_SETUP.md) guide to create your Cloud SQL instance.
+
+### Step 3: Configure Environment Variables
+Create a `.env` file with your Cloud SQL details:
 ```bash
-GROQ_API_KEY=your_chatgroq_api_key_here
+# Copy the template
+cp env_template.txt .env
 ```
 
-### Step 3: Test Database Connection
+Update the `.env` file with your Cloud SQL credentials:
+```env
+# Cloud SQL Connection Details
+MYSQL_HOST=your_cloud_sql_public_ip
+MYSQL_USER=iot-chatbot-user
+MYSQL_PASSWORD=your_cloud_sql_password
+MYSQL_DATABASE=iot_chatbot_db
+MYSQL_PORT=3306
+
+# API Keys
+GROQ_API_KEY=your_groq_api_key
+
+# Application Settings
+DEBUG=True
+FEEDBACK_INTERVAL=3
+```
+
+### Step 4: Test Database Connection
 ```bash
 python test_db.py
 ```
@@ -24,29 +45,22 @@ This will test all database operations and confirm everything is working.
 
 ## 🔧 Full Setup (Production Mode)
 
-### Step 1: Environment Configuration
-Copy `env_template.txt` to `.env` and fill in your values:
+### Step 1: Google Cloud SQL Setup
+1. Create Cloud SQL instance (see [CLOUD_SQL_SETUP.md](CLOUD_SQL_SETUP.md))
+2. Create database and user
+3. Configure network access
+4. Get connection details
 
-```bash
-# Copy template
-cp env_template.txt .env
-
-# Edit the .env file with your actual values
-```
-
-Required environment variables:
-- `GROQ_API_KEY`: Your ChatGroq API key (get from https://console.groq.com/)
-- `MYSQL_HOST`: MySQL database host
-- `MYSQL_USER`: MySQL username
-- `MYSQL_PASSWORD`: MySQL password
-- `MYSQL_DATABASE`: Database name
-
-### Step 2: Database Setup
-If you want to use the full version with database:
-
-1. Install MySQL
-2. Create database: `CREATE DATABASE iot_chatbot_db;`
-3. Update `.env` with your MySQL credentials
+### Step 2: Configure CircleCI Environment Variables
+In your CircleCI project settings, add these environment variables:
+- `GROQ_API_KEY`
+- `MYSQL_HOST` (your Cloud SQL public IP)
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `MYSQL_DATABASE`
+- `MYSQL_PORT`
+- `DEBUG`
+- `FEEDBACK_INTERVAL`
 
 ### Step 3: Test Database Connection
 ```bash
@@ -60,14 +74,13 @@ This will test all database operations and confirm everything is working.
 python app.py
 ```
 
-## 🎯 Running Options
+## 💻 Running Options
 
 ### Option 1: Streamlit (Development)
 ```bash
 streamlit run main.py
 ```
 - Runs on port 8501
-- Full Streamlit interface
 - Good for development
 
 ### Option 2: Flask (Production)
@@ -75,32 +88,19 @@ streamlit run main.py
 python app.py
 ```
 - Runs on port 5000
-- Requires database setup
-- Production ready
+- Requires Cloud SQL setup
+- Production-ready
 
-## 🔑 Getting ChatGroq API Key
-
-1. Go to https://console.groq.com/
-2. Sign up for a free account
-3. Create an API key
-4. Add it to your `.env` file:
-   ```
-   GROQ_API_KEY=your_actual_api_key_here
-   ```
-
-## 🐛 Troubleshooting
-
-### Issue: "ChatGroq API key not found"
-**Solution**: Add your GROQ_API_KEY to the `.env` file
+## 🔧 Troubleshooting
 
 ### Issue: "Database connection failed"
 **Solution**: 
 1. Run `python test_db.py` to diagnose database issues
-2. Check your MySQL credentials in `.env`
-3. Ensure MySQL is running and accessible
+2. Check your Cloud SQL configuration
+3. Verify network access is configured
 
 ### Issue: "Module not found"
-**Solution**: Install dependencies with `pip install -r requirements.txt`
+**Solution**: Run `pip install -r requirements.txt`
 
 ### Issue: "Port already in use"
 **Solution**: Change port in the app file or kill existing process
@@ -109,49 +109,33 @@ python app.py
 **Solution**: 
 1. Run `python test_db.py` to verify database connectivity
 2. Check the console logs for database operation messages
-3. Ensure MySQL is running and accessible
+3. Ensure Cloud SQL is running and accessible
+
+### Issue: "Can't connect to MySQL server"
+**Solution**:
+1. Check your Cloud SQL public IP in `.env` file
+2. Verify network access is configured in Cloud SQL
+3. Ensure the instance is running
 
 ## 📝 Test the Chatbot
 
-1. Open your browser to `http://localhost:5000`
-2. Register with your email and phone
-3. Start chatting!
-
-### Sample Questions to Test:
-- "What IoT products do you support?"
-- "Tell me about the Smart Home Hub"
-- "How does the Security Camera System work?"
-- "What are the features of the Smart Thermostat?"
-
-## 🔄 Switching Between Modes
-
-### Development Mode (Streamlit)
-```bash
-streamlit run main.py
-```
-
-### Production Mode (Flask)
-```bash
-python app.py
-```
-
-## 📊 Status Check
-
-Visit `http://localhost:5000/api/status` to check:
-- Database connection status
-- RAG chain availability
-- Document processor status
-
-## 🎯 Next Steps
-
 1. **Set up your GROQ API key** for full AI capabilities
-2. **Test database connectivity** with `python test_db.py`
-3. **Configure database** (optional) for production use
+2. **Configure Cloud SQL** following the setup guide
+3. **Test database connectivity** with `python test_db.py`
 4. **Deploy to production** using the deployment files
 
 ## 💡 Tips
 
-- The chatbot works best with a GROQ API key
 - Both Streamlit and Flask versions use the same backend logic
 - Check console logs for detailed operation tracking
-- Use `test_db.py` to verify database functionality before running the full app 
+- Use `test_db.py` to verify database functionality before running the full app
+- Cloud SQL is required for production deployment
+- Local testing requires proper network access configuration
+
+## 🚀 Deployment
+
+For production deployment, follow the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) which includes:
+- Docker containerization
+- Google Kubernetes Engine (GKE) deployment
+- CircleCI CI/CD pipeline
+- Environment variable management 

@@ -1,247 +1,358 @@
 # IoT Support Chatbot - Deployment Guide
 
-This guide provides step-by-step instructions for deploying the IoT Support Chatbot to Google Cloud Platform (GCP) using Kubernetes and CircleCI.
+This guide provides step-by-step instructions for deploying the IoT Support Chatbot to Google Cloud Platform (GCP) using Google Kubernetes Engine (GKE) and CircleCI.
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   CircleCI      │    │   Google Cloud  │    │   Cloud SQL     │
+│   CI/CD         │───▶│   Kubernetes    │───▶│   MySQL         │
+│   Pipeline      │    │   Engine (GKE)  │    │   Database      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
 ## 📋 Prerequisites
 
 ### 1. Google Cloud Platform Setup
-- GCP account with billing enabled
-- Google Cloud SDK installed
-- Required APIs enabled (see FULL_DOCUMENTATION.md in sample folder)
+- Google Cloud account with billing enabled
+- Google Cloud CLI installed (optional, web console works too)
+- Project with required APIs enabled
 
-### 2. CircleCI Setup
+### 2. Required GCP APIs
+Enable these APIs in your Google Cloud Console:
+- Kubernetes Engine API
+- Container Registry API
+- Compute Engine API
+- Cloud Build API
+- Cloud Storage API
+- IAM API
+
+### 3. CircleCI Setup
 - CircleCI account connected to your GitHub repository
-- Environment variables configured in CircleCI
+- Project configured in CircleCI
 
-### 3. Local Development
-- Docker installed
-- Python 3.8+ installed
-- MySQL database (optional for local testing)
+## 🚀 Step-by-Step Deployment
 
-## 🚀 Deployment Steps
+### Step 1: Google Cloud SQL Setup
 
-### Step 1: GCP Project Setup
+Follow the [CLOUD_SQL_SETUP.md](CLOUD_SQL_SETUP.md) guide to:
+1. Create Cloud SQL MySQL instance
+2. Create database and user
+3. Configure network access
+4. Get connection details
 
-1. **Create GCP Project** (if not exists):
+### Step 2: Configure CircleCI Environment Variables
+
+In your CircleCI project settings, add these environment variables:
+
+#### GCP Configuration
+```
+GCLOUD_SERVICE_KEY=[Base64 encoded service account key]
+GOOGLE_PROJECT_ID=[Your GCP project ID]
+GKE_CLUSTER=[Your GKE cluster name]
+GOOGLE_COMPUTE_REGION=[Your region, e.g., us-central1]
+```
+
+#### Application Configuration
+```
+GROQ_API_KEY=[Your Groq API key]
+MYSQL_HOST=[Cloud SQL public IP]
+MYSQL_USER=[Cloud SQL username]
+MYSQL_PASSWORD=[Cloud SQL password]
+MYSQL_DATABASE=[Database name]
+MYSQL_PORT=3306
+DEBUG=true
+FEEDBACK_INTERVAL=3
+```
+
+### Step 3: Create GCP Service Account
+
+1. Go to Google Cloud Console → IAM & Admin → Service Accounts
+2. Create a new service account with these roles:
+   - Kubernetes Engine Admin
+   - Storage Admin
+   - Cloud Build Service Account
+   - Container Registry Service Agent
+
+3. Download the JSON key and encode it to base64:
    ```bash
-   gcloud projects create YOUR_PROJECT_ID
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-
-2. **Enable Required APIs**:
-   ```bash
-   gcloud services enable container.googleapis.com
-   gcloud services enable containerregistry.googleapis.com
-   gcloud services enable compute.googleapis.com
-   gcloud services enable cloudbuild.googleapis.com
-   gcloud services enable storage.googleapis.com
-   gcloud services enable iam.googleapis.com
-   ```
-
-3. **Create GKE Cluster**:
-   ```bash
-   gcloud container clusters create iot-support-cluster \
-     --region=us-central1 \
-     --num-nodes=1 \
-     --machine-type=e2-medium
-   ```
-
-4. **Create Artifact Registry**:
-   ```bash
-   gcloud artifacts repositories create iot-support-repo \
-     --repository-format=docker \
-     --location=us-central1
-   ```
-
-### Step 2: Service Account Setup
-
-1. **Create Service Account**:
-   ```bash
-   gcloud iam service-accounts create iot-support-sa \
-     --display-name="IoT Support Chatbot Service Account"
-   ```
-
-2. **Assign Roles**:
-   ```bash
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:iot-support-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-     --role="roles/container.admin"
+   # On Windows:
+   certutil -encode gcp-key.json gcp-key.txt
    
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:iot-support-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-     --role="roles/storage.admin"
-   
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:iot-support-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-     --role="roles/artifactregistry.admin"
-   ```
-
-3. **Create and Download Key**:
-   ```bash
-   gcloud iam service-accounts keys create gcp-key.json \
-     --iam-account=iot-support-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
-   ```
-
-4. **Convert to Base64** (for CircleCI):
-   ```bash
+   # On Linux/Mac:
    base64 -i gcp-key.json
    ```
 
-### Step 3: CircleCI Configuration
+4. Add the base64 encoded key to CircleCI as `GCLOUD_SERVICE_KEY`
 
-1. **Add Environment Variables** to CircleCI:
-   - `GCLOUD_SERVICE_KEY`: Base64 encoded service account key
-   - `GOOGLE_PROJECT_ID`: Your GCP project ID
-   - `GKE_CLUSTER`: `iot-support-cluster`
-   - `GOOGLE_COMPUTE_REGION`: `us-central1`
-   - `GROQ_API_KEY`: Your ChatGroq API key
+### Step 4: Create GKE Cluster
 
-2. **Push Code** to GitHub repository
+1. Go to Google Cloud Console → Kubernetes Engine
+2. Click "Create Cluster"
+3. Configure:
+   - **Name**: `iot-chatbot-cluster`
+   - **Region**: `us-central1`
+   - **Zone**: Any zone in us-central1
+   - **Machine type**: `e2-medium` (2 vCPU, 4 GB RAM)
+   - **Node count**: 1-3 nodes
 
-3. **Monitor Deployment** in CircleCI dashboard
+### Step 5: Push Code to GitHub
 
-### Step 4: Kubernetes Secrets
+```bash
+git add .
+git commit -m "Add deployment configuration"
+git push origin main
+```
 
-1. **Create Kubernetes Secret** for API keys:
-   ```bash
-   kubectl create secret generic iot-support-secrets \
-     --from-literal=GROQ_API_KEY=your_groq_api_key \
-     --from-literal=MYSQL_HOST=your_mysql_host \
-     --from-literal=MYSQL_USER=your_mysql_user \
-     --from-literal=MYSQL_PASSWORD=your_mysql_password \
-     --from-literal=MYSQL_DATABASE=your_mysql_database
-   ```
+### Step 6: Monitor CircleCI Build
 
-### Step 5: Verify Deployment
+1. Go to your CircleCI project
+2. Monitor the build process:
+   - **Build Docker Image**: Creates and pushes container image
+   - **Deploy to GKE**: Deploys application to Kubernetes
 
-1. **Check Pod Status**:
-   ```bash
-   kubectl get pods
-   ```
+### Step 7: Access Your Application
 
-2. **Check Service**:
-   ```bash
-   kubectl get services
-   ```
-
-3. **Get External IP**:
+1. Get the LoadBalancer IP:
    ```bash
    kubectl get service iot-support-service
    ```
 
+2. Access your application at: `http://[LOAD_BALANCER_IP]`
+
 ## 🔧 Configuration Files
 
 ### Dockerfile
-- Multi-stage build for optimization
-- Python 3.10 base image
-- Installs system dependencies
-- Copies application code
-- Exposes port 5000
+```dockerfile
+FROM python:3.10-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+RUN apt-get update && apt-get install -y build-essential curl default-mysql-client
+COPY . .
+RUN pip install --no-cache-dir -e .
+EXPOSE 5000
+CMD ["sh", "-c", "python debug_env.py && python app.py"]
+```
 
-### kubernetes-deployment.yaml
-- Deployment with 1 replica
-- LoadBalancer service
-- Environment variables from secrets
-- Health checks and resource limits
+### Kubernetes Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-support-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-support-chatbot
+  template:
+    metadata:
+      labels:
+        app: iot-support-chatbot
+    spec:
+      containers:
+      - name: iot-support-chatbot
+        image: us-central1-docker.pkg.dev/[PROJECT_ID]/iot-support-repo/iot-support-chatbot:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: GROQ_API_KEY
+          value: "${GROQ_API_KEY}"
+        - name: MYSQL_HOST
+          value: "${MYSQL_HOST}"
+        - name: MYSQL_USER
+          value: "${MYSQL_USER}"
+        - name: MYSQL_PASSWORD
+          value: "${MYSQL_PASSWORD}"
+        - name: MYSQL_DATABASE
+          value: "${MYSQL_DATABASE}"
+        - name: MYSQL_PORT
+          value: "${MYSQL_PORT}"
+        - name: DEBUG
+          value: "${DEBUG}"
+        - name: FEEDBACK_INTERVAL
+          value: "${FEEDBACK_INTERVAL}"
+```
 
-### .circleci/config.yml
-- Automated CI/CD pipeline
-- Docker image build and push
-- Kubernetes deployment
-- Environment-specific configurations
+### CircleCI Configuration
+```yaml
+version: 2.1
+executors:
+  docker-executor:
+    docker:
+      - image: cimg/base:2024.01
+    working_directory: ~/repo
 
-## 🐛 Troubleshooting
+jobs:
+  build_docker_image:
+    executor: docker-executor
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Google Cloud SDK
+          command: |
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+            sudo apt-get update && sudo apt-get install google-cloud-cli -y
+      - run:
+          name: Authenticate with google cloud
+          command: |
+              echo "$GCLOUD_SERVICE_KEY" | base64 --decode > gcp-key.json
+              gcloud auth activate-service-account --key-file=gcp-key.json
+              gcloud auth configure-docker us-central1-docker.pkg.dev || gcloud auth configure-docker
+      - run:
+          name: Build and Push Image
+          command: |
+              docker build -t us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/iot-support-repo/iot-support-chatbot:latest .
+              docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/iot-support-repo/iot-support-chatbot:latest
 
-### Issue: "Image pull failed"
-**Solution**: Check Artifact Registry permissions and image name
+  deploy_to_gke:
+    executor: docker-executor
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Google Cloud SDK and kubectl
+          command: |
+            echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+            sudo apt-get update && sudo apt-get install google-cloud-cli kubectl google-cloud-cli-gke-gcloud-auth-plugin -y
+            echo 'export USE_GKE_GCLOUD_AUTH_PLUGIN=True' >> $BASH_ENV
+      - run:
+          name: Authenticate with google cloud
+          command: |
+              echo "$GCLOUD_SERVICE_KEY" | base64 --decode > gcp-key.json
+              gcloud auth activate-service-account --key-file=gcp-key.json
+              gcloud auth configure-docker us-central1-docker.pkg.dev || gcloud auth configure-docker
+      - run:
+          name: Configure GKE
+          command: |
+              gcloud container clusters get-credentials $GKE_CLUSTER --region $GOOGLE_COMPUTE_REGION --project $GOOGLE_PROJECT_ID
+      - run:
+          name: Substitute environment variables
+          command: |
+              envsubst < kubernetes-deployment.yaml > kubernetes-deployment-substituted.yaml
+      - run:
+          name: Deploy to GKE
+          command: |
+              kubectl apply -f kubernetes-deployment-substituted.yaml --validate=false
+              kubectl rollout restart deployment iot-support-chatbot
 
-### Issue: "Pod not starting"
-**Solution**: Check logs with `kubectl logs <pod-name>`
+workflows:
+  version: 2
+  deploy_pipeline:
+    jobs:
+      - build_docker_image
+      - deploy_to_gke:
+          requires:
+            - build_docker_image
+```
 
-### Issue: "Service not accessible"
-**Solution**: Verify LoadBalancer configuration and firewall rules
+## 🔍 Troubleshooting
 
-### Issue: "Database connection failed"
-**Solution**: Check MySQL credentials in Kubernetes secrets
+### Build Failures
 
-### Issue: "API key not found"
-**Solution**: Verify GROQ_API_KEY in Kubernetes secrets
+#### Issue: "docker: command not found"
+**Solution**: The CircleCI configuration uses `cimg/base:2024.01` which includes Docker.
+
+#### Issue: "kubectl: command not found"
+**Solution**: The configuration installs kubectl explicitly.
+
+#### Issue: "gke-gcloud-auth-plugin not found"
+**Solution**: The configuration installs the GKE auth plugin.
+
+### Deployment Failures
+
+#### Issue: "Can't connect to MySQL server"
+**Solution**:
+1. Verify Cloud SQL instance is running
+2. Check network access configuration
+3. Verify environment variables are set correctly
+
+#### Issue: "Image pull failed"
+**Solution**:
+1. Check if the Docker image was built successfully
+2. Verify the image repository path
+3. Check authentication with Container Registry
+
+### Application Issues
+
+#### Issue: "Environment variables not found"
+**Solution**:
+1. Check CircleCI environment variables are set
+2. Verify `envsubst` is working correctly
+3. Check the substituted Kubernetes deployment file
+
+#### Issue: "Application crashes on startup"
+**Solution**:
+1. Check application logs: `kubectl logs <pod-name>`
+2. Verify database connection
+3. Check environment variable loading
 
 ## 📊 Monitoring
 
-### Application Logs
+### Check Application Status
 ```bash
-kubectl logs -f deployment/iot-support-chatbot
+# Get pod status
+kubectl get pods
+
+# Check application logs
+kubectl logs <pod-name>
+
+# Get service information
+kubectl get services
 ```
 
-### Service Status
+### Check Database Connection
 ```bash
-kubectl get services iot-support-service
+# Test database connectivity from pod
+kubectl exec <pod-name> -- python -c "
+import os
+print('MYSQL_HOST:', os.getenv('MYSQL_HOST'))
+print('MYSQL_USER:', os.getenv('MYSQL_USER'))
+print('MYSQL_DATABASE:', os.getenv('MYSQL_DATABASE'))
+"
 ```
 
-### Pod Status
+## 🧹 Cleanup
+
+### Remove Application
 ```bash
-kubectl get pods -l app=iot-support-chatbot
+kubectl delete deployment iot-support-chatbot
+kubectl delete service iot-support-service
 ```
 
-## 🔄 Updates and Rollbacks
+### Remove Cloud SQL Instance
+1. Go to Google Cloud Console → SQL
+2. Select your instance
+3. Click "Delete"
 
-### Update Application
-1. Push new code to GitHub
-2. CircleCI automatically builds and deploys
-3. Monitor deployment status
+### Remove GKE Cluster
+1. Go to Google Cloud Console → Kubernetes Engine
+2. Select your cluster
+3. Click "Delete"
 
-### Rollback
-```bash
-kubectl rollout undo deployment/iot-support-chatbot
-```
+## 💰 Cost Optimization
 
-## 💡 Best Practices
+### Estimated Monthly Costs
+- **GKE Cluster**: $50-100/month (depending on node count)
+- **Cloud SQL**: $25-50/month (db-f1-micro instance)
+- **Container Registry**: $5-10/month (storage)
+- **Load Balancer**: $20-30/month
 
-1. **Use Environment Variables** for configuration
-2. **Implement Health Checks** for reliability
-3. **Set Resource Limits** to prevent resource exhaustion
-4. **Use Secrets** for sensitive data
-5. **Monitor Logs** regularly
-6. **Test Locally** before deploying
+### Cost Reduction Tips
+1. Use `db-f1-micro` for Cloud SQL (smallest instance)
+2. Reduce GKE node count to 1 for testing
+3. Delete resources when not in use
+4. Use preemptible nodes for non-production workloads
 
-## 📝 Next Steps
+## 🎯 Next Steps
 
-1. **Set up monitoring** (Prometheus/Grafana)
-2. **Configure SSL/TLS** certificates
-3. **Implement auto-scaling** based on load
-4. **Set up backup** for database
-5. **Configure alerts** for critical issues
-
-## 🔗 Useful Commands
-
-```bash
-# Get cluster info
-kubectl cluster-info
-
-# View all resources
-kubectl get all
-
-# Describe deployment
-kubectl describe deployment iot-support-chatbot
-
-# Port forward for local testing
-kubectl port-forward service/iot-support-service 8080:80
-
-# View logs
-kubectl logs -f deployment/iot-support-chatbot
-
-# Scale deployment
-kubectl scale deployment iot-support-chatbot --replicas=3
-```
-
-## 📚 Additional Resources
-
-- [GCP Documentation](https://cloud.google.com/docs)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [CircleCI Documentation](https://circleci.com/docs/)
-- [Docker Documentation](https://docs.docker.com/)
-
----
-
-**Note**: Replace `YOUR_PROJECT_ID` with your actual GCP project ID throughout this guide. 
+1. **Monitor the application** for performance and errors
+2. **Set up logging** with Google Cloud Logging
+3. **Configure monitoring** with Google Cloud Monitoring
+4. **Set up alerts** for critical issues
+5. **Implement auto-scaling** based on traffic
+6. **Add SSL/TLS** for production security 

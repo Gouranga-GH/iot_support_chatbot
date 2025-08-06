@@ -58,6 +58,17 @@ class IOTChatbotApp:
     def _initialize_app(self):
         """Initialize the application and validate configuration"""
         try:
+            # Debug: Print environment variables
+            logger.info("🔍 Checking environment variables...")
+            import os
+            mysql_vars = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_DATABASE', 'MYSQL_PORT']
+            for var in mysql_vars:
+                value = os.getenv(var)
+                if value:
+                    logger.info(f"✅ {var}: {value}")
+                else:
+                    logger.warning(f"❌ {var}: NOT SET")
+            
             # Validate configuration
             if not validate_config():
                 logger.error("Configuration validation failed. Please check your .env file.")

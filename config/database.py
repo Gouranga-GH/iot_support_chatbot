@@ -38,6 +38,10 @@ class DatabaseManager:
             bool: True if connection successful, False otherwise
         """
         try:
+            # Debug: Print connection parameters (without password)
+            logger.info(f"Attempting to connect to MySQL at {MYSQL_CONFIG['host']}:{MYSQL_CONFIG['port']}")
+            logger.info(f"Database: {MYSQL_CONFIG['database']}, User: {MYSQL_CONFIG['user']}")
+            
             # Create connection to MySQL server
             self.connection = mysql.connector.connect(
                 host=MYSQL_CONFIG['host'],

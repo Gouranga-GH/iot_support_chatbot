@@ -29,13 +29,22 @@ CHUNK_OVERLAP = 500  # Overlap between chunks for context continuity
 # =============================================================================
 
 # MySQL Database Settings
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
+MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
+MYSQL_PORT = int(os.getenv('MYSQL_PORT', 3306))
+
 MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'iot_chatbot_db'),
-    'port': int(os.getenv('MYSQL_PORT', 3306))
+    'host': MYSQL_HOST,
+    'user': MYSQL_USER,
+    'password': MYSQL_PASSWORD,
+    'database': MYSQL_DATABASE,
+    'port': MYSQL_PORT
 }
+
+# Debug: Print MySQL configuration (without password)
+print(f"MySQL Configuration - Host: {MYSQL_HOST}, User: {MYSQL_USER}, Database: {MYSQL_DATABASE}, Port: {MYSQL_PORT}")
 
 # =============================================================================
 # API KEYS
@@ -180,17 +189,22 @@ def validate_config():
         'GROQ_API_KEY',
         'MYSQL_HOST',
         'MYSQL_USER',
+        'MYSQL_PASSWORD',
         'MYSQL_DATABASE'
     ]
     
     missing_vars = []
     for var in required_vars:
-        if not os.getenv(var):
+        value = os.getenv(var)
+        if not value:
             missing_vars.append(var)
+        else:
+            print(f"✅ {var}: {value[:10]}{'...' if len(value) > 10 else ''}")
     
     if missing_vars:
-        print(f"Missing required environment variables: {missing_vars}")
-        print("Please check your .env file")
+        print(f"❌ Missing required environment variables: {missing_vars}")
+        print("Please check your .env file or Kubernetes environment variables")
         return False
     
+    print("✅ All required environment variables are set")
     return True 
