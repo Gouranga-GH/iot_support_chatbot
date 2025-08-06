@@ -63,12 +63,20 @@ jobs:
       - run:
           name: Substitute environment variables
           command: |
+              echo "=== Environment Variable Debug ==="
               echo "Available environment variables:"
               env | grep -E "(GROQ|MYSQL|DEBUG|FEEDBACK)" || echo "No matching environment variables found"
+              echo ""
+              echo "Original kubernetes-deployment.yaml:"
+              cat kubernetes-deployment.yaml
+              echo ""
               echo "Running envsubst..."
               envsubst < kubernetes-deployment.yaml > kubernetes-deployment-substituted.yaml
+              echo ""
               echo "Substituted file contents:"
               cat kubernetes-deployment-substituted.yaml
+              echo ""
+              echo "=== End Debug ==="
       
       - run:
           name: Deploy to GKE
